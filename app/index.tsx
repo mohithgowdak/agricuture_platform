@@ -4,6 +4,7 @@ import { router } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { Colors } from '@/constants/Colors';
 import { Sprout } from 'lucide-react-native';
+import { storage } from '@/lib/storage';
 
 export default function IndexScreen() {
   const [loading, setLoading] = useState(true);
@@ -17,38 +18,40 @@ export default function IndexScreen() {
       console.log('🔍 Checking authentication status...');
       
       // Check for demo session first (more reliable for demo)
-      if (typeof window !== 'undefined') {
-        const demoSession = localStorage.getItem('demo_session');
-        console.log('📱 Demo session check:', demoSession ? 'Found' : 'Not found');
-        
-        if (demoSession) {
-          try {
-            const session = JSON.parse(demoSession);
-            console.log('📊 Demo session data:', session);
+      const demoSessionStr = await storage.getItem('demo_session');
+      console.log('📱 Demo session check:', demoSessionStr ? 'Found' : 'Not found');
+      
+      if (demoSessionStr) {
+        try {
+          const session = JSON.parse(demoSessionStr);
+          console.log('📊 Demo session data:', session);
+          
+          // Check if session is still valid
+          if (session.expires_at > Date.now()) {
+            console.log('✅ Valid demo session found, redirecting to welcome');
             
-            // Check if session is still valid
-            if (session.expires_at > Date.now()) {
-              console.log('✅ Valid demo session found, redirecting to welcome');
-              
-              // Use setTimeout to ensure proper navigation
-              setTimeout(() => {
-                router.replace('/onboarding/welcome');
-              }, 100);
-              return;
-            } else {
-              console.log('⏰ Demo session expired, removing...');
-              // Demo session expired, remove it
-              localStorage.removeItem('demo_session');
-              localStorage.removeItem('demo_user');
-              localStorage.removeItem('demo_farmer_profile');
-            }
-          } catch (error) {
-            console.log('❌ Invalid demo session, removing...');
-            // Invalid demo session, remove it
-            localStorage.removeItem('demo_session');
-            localStorage.removeItem('demo_user');
-            localStorage.removeItem('demo_farmer_profile');
+            // Use setTimeout to ensure proper navigation
+            setTimeout(() => {
+              router.replace('/onboarding/welcome');
+            }, 100);
+            return;
+          } else {
+            console.log('⏰ Demo session expired, removing...');
+            // Demo session expired, remove it
+            await storage.removeItem('demo_session');
+            await storage.removeItem('demo_user');
+            await storage.removeItem('demo_farmer_profile');
+            await storage.removeItem('demo_buyer_profile');
+            await storage.removeItem('demo_logistics_profile');
           }
+        } catch (error) {
+          console.log('❌ Invalid demo session, removing...');
+          // Invalid demo session, remove it
+          await storage.removeItem('demo_session');
+          await storage.removeItem('demo_user');
+          await storage.removeItem('demo_farmer_profile');
+          await storage.removeItem('demo_buyer_profile');
+          await storage.removeItem('demo_logistics_profile');
         }
       }
 

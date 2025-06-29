@@ -5,6 +5,44 @@
 import { supabase } from './supabase';
 import { Platform } from 'react-native';
 
+let AsyncStorage: typeof import('@react-native-async-storage/async-storage').default | undefined;
+if (Platform.OS !== 'web') {
+  // Dynamically require to avoid issues on web
+  AsyncStorage = require('@react-native-async-storage/async-storage').default;
+}
+
+export const storage = {
+  async getItem(key: string): Promise<string | null> {
+    if (Platform.OS === 'web' && typeof localStorage !== 'undefined') {
+      return localStorage.getItem(key);
+    } else if (AsyncStorage) {
+      return await AsyncStorage.getItem(key);
+    }
+    return null;
+  },
+  async setItem(key: string, value: string): Promise<void> {
+    if (Platform.OS === 'web' && typeof localStorage !== 'undefined') {
+      localStorage.setItem(key, value);
+    } else if (AsyncStorage) {
+      await AsyncStorage.setItem(key, value);
+    }
+  },
+  async removeItem(key: string): Promise<void> {
+    if (Platform.OS === 'web' && typeof localStorage !== 'undefined') {
+      localStorage.removeItem(key);
+    } else if (AsyncStorage) {
+      await AsyncStorage.removeItem(key);
+    }
+  },
+  async clear(): Promise<void> {
+    if (Platform.OS === 'web' && typeof localStorage !== 'undefined') {
+      localStorage.clear();
+    } else if (AsyncStorage) {
+      await AsyncStorage.clear();
+    }
+  }
+};
+
 export interface UploadResult {
   success: boolean;
   url?: string;

@@ -105,15 +105,21 @@ export default function CropsScreen() {
   };
 
   const handleAddCrop = () => {
-    router.push('/crops/add');
+    // TODO: Implement add crop screen
+    Alert.alert('Coming Soon', 'Add crop functionality will be available soon!');
+    // router.push('/crops/add');
   };
 
   const handleEditCrop = (cropId: string) => {
-    router.push(`/crops/edit/${cropId}`);
+    // TODO: Implement edit crop screen
+    Alert.alert('Coming Soon', 'Edit crop functionality will be available soon!');
+    // router.push(`/crops/edit/${cropId}`);
   };
 
   const handleViewCrop = (cropId: string) => {
-    router.push(`/crops/view/${cropId}`);
+    // TODO: Implement view crop screen
+    Alert.alert('Coming Soon', 'View crop functionality will be available soon!');
+    // router.push(`/crops/view/${cropId}`);
   };
 
   const handleDeleteCrop = (cropId: string) => {

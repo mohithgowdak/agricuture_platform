@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { storage } from '@/lib/storage';
+import { Platform } from 'react-native';
 
 export type UserRole = 'farmer' | 'buyer' | 'logistics' | null;
 
@@ -7,12 +9,12 @@ export function useUserRole() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check for demo user role
-    if (typeof window !== 'undefined') {
-      const demoUser = localStorage.getItem('demo_user');
-      if (demoUser) {
+    const loadUserRole = async () => {
+      // Check for demo user role
+      const demoUserStr = await storage.getItem('demo_user');
+      if (demoUserStr) {
         try {
-          const user = JSON.parse(demoUser);
+          const user = JSON.parse(demoUserStr);
           setUserRole(user.role || 'farmer');
         } catch (error) {
           setUserRole('farmer');
@@ -20,19 +22,38 @@ export function useUserRole() {
       } else {
         setUserRole('farmer'); // Default for demo
       }
+      setLoading(false);
+    };
+
+    // Load user role on mount
+    loadUserRole();
+
+    // Listen for logout events (only on web)
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      const handleLogout = () => {
+        console.log('🔄 Resetting user role due to logout');
+        setUserRole(null);
+        setLoading(false);
+      };
+
+      window.addEventListener('userLogout', handleLogout);
+      
+      // Cleanup listener on unmount
+      return () => {
+        window.removeEventListener('userLogout', handleLogout);
+      };
     }
-    setLoading(false);
   }, []);
 
-  const updateUserRole = (role: UserRole) => {
+  const updateUserRole = async (role: UserRole) => {
     setUserRole(role);
-    if (typeof window !== 'undefined' && role) {
-      const demoUser = localStorage.getItem('demo_user');
-      if (demoUser) {
+    if (role) {
+      const demoUserStr = await storage.getItem('demo_user');
+      if (demoUserStr) {
         try {
-          const user = JSON.parse(demoUser);
+          const user = JSON.parse(demoUserStr);
           user.role = role;
-          localStorage.setItem('demo_user', JSON.stringify(user));
+          await storage.setItem('demo_user', JSON.stringify(user));
         } catch (error) {
           console.error('Error updating user role:', error);
         }

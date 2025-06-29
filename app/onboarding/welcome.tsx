@@ -5,13 +5,16 @@ import { router } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { Colors } from '@/constants/Colors';
 import { Sprout, ArrowRight } from 'lucide-react-native';
+import { storage } from '@/lib/storage';
 
 export default function WelcomeScreen() {
   const [loading, setLoading] = useState(false);
   const [userInfo, setUserInfo] = useState<{ email?: string; phone?: string } | null>(null);
+  const [demoProfileExists, setDemoProfileExists] = useState(false);
 
   useEffect(() => {
     getUserInfo();
+    checkDemoProfile();
   }, []);
 
   const getUserInfo = async () => {
@@ -19,17 +22,15 @@ export default function WelcomeScreen() {
       console.log('👤 Getting user info...');
       
       // Check for demo session first
-      if (typeof window !== 'undefined') {
-        const demoUser = localStorage.getItem('demo_user');
-        if (demoUser) {
-          const user = JSON.parse(demoUser);
-          console.log('👤 Demo user found:', user);
-          setUserInfo({
-            email: user.email,
-            phone: user.phone,
-          });
-          return;
-        }
+      const demoUserStr = await storage.getItem('demo_user');
+      if (demoUserStr) {
+        const user = JSON.parse(demoUserStr);
+        console.log('👤 Demo user found:', user);
+        setUserInfo({
+          email: user.email,
+          phone: user.phone,
+        });
+        return;
       }
 
       // Fallback to Supabase user
@@ -46,6 +47,11 @@ export default function WelcomeScreen() {
     }
   };
 
+  const checkDemoProfile = async () => {
+    const demoProfile = await storage.getItem('demo_farmer_profile');
+    setDemoProfileExists(!!demoProfile);
+  };
+
   const handleGetStarted = async () => {
     setLoading(true);
     try {
@@ -53,7 +59,7 @@ export default function WelcomeScreen() {
       
       // Check if we have a demo farmer profile
       if (typeof window !== 'undefined') {
-        const demoProfile = localStorage.getItem('demo_farmer_profile');
+        const demoProfile = await storage.getItem('demo_farmer_profile');
         if (demoProfile) {
           console.log('🚜 Demo profile exists, going to main app');
           // Demo profile exists, go to main app
@@ -158,7 +164,7 @@ export default function WelcomeScreen() {
             🔍 User: {userInfo?.email || userInfo?.phone || 'Not found'}
           </Text>
           <Text style={styles.debugText}>
-            📱 Demo Profile: {typeof window !== 'undefined' && localStorage.getItem('demo_farmer_profile') ? 'Exists' : 'Not found'}
+            📱 Demo Profile: {demoProfileExists ? 'Exists' : 'Not found'}
           </Text>
         </View>
       </View>

@@ -56,12 +56,12 @@ export default function LogisticsRegisterScreen() {
     'Organic Products', 'Hazardous Materials', 'Oversized Cargo'
   ];
 
-  const toggleSelection = (array: string[], value: string, setter: (prev: any) => void) => {
+  const toggleSelection = (arrayKey: 'serviceTypes' | 'operatingRegions' | 'specializations', value: string, setter: (prev: any) => void) => {
     setter((prev: any) => ({
       ...prev,
-      [array]: prev[array].includes(value)
-        ? prev[array].filter((item: string) => item !== value)
-        : [...prev[array], value]
+      [arrayKey]: prev[arrayKey].includes(value)
+        ? prev[arrayKey].filter((item: string) => item !== value)
+        : [...prev[arrayKey], value]
     }));
   };
 

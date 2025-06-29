@@ -15,6 +15,7 @@ import { supabase } from '@/lib/supabase';
 import { Colors } from '@/constants/Colors';
 import { sendOTPSMS, verifyOTP, sendOTPEmail } from '@/lib/freeOtpService';
 import { Phone, ArrowRight, Mail, MessageCircle, ArrowLeft } from 'lucide-react-native';
+import { storage } from '@/lib/storage';
 
 export default function VerifyScreen() {
   const [method, setMethod] = useState<'phone' | 'email'>('email');
@@ -107,21 +108,19 @@ export default function VerifyScreen() {
         };
 
         // Store demo session with proper expiration
-        if (typeof window !== 'undefined') {
-          const session = {
-            access_token: `demo_token_${Date.now()}`,
-            refresh_token: `demo_refresh_${Date.now()}`,
-            expires_in: 3600,
-            expires_at: Date.now() + 3600000, // 1 hour from now
-            token_type: 'bearer',
-            user: mockUser
-          };
-          
-          localStorage.setItem('demo_session', JSON.stringify(session));
-          localStorage.setItem('demo_user', JSON.stringify(mockUser));
-          
-          console.log('💾 Demo session stored:', session);
-        }
+        const session = {
+          access_token: `demo_token_${Date.now()}`,
+          refresh_token: `demo_refresh_${Date.now()}`,
+          expires_in: 3600,
+          expires_at: Date.now() + 3600000, // 1 hour from now
+          token_type: 'bearer',
+          user: mockUser
+        };
+        
+        await storage.setItem('demo_session', JSON.stringify(session));
+        await storage.setItem('demo_user', JSON.stringify(mockUser));
+        
+        console.log('💾 Demo session stored:', session);
 
         // Navigate to welcome screen with a slight delay to ensure state is saved
         console.log('🚀 Navigating to welcome screen...');
@@ -134,11 +133,7 @@ export default function VerifyScreen() {
             console.log('✅ Navigation command executed');
           } catch (navError) {
             console.error('❌ Navigation error:', navError);
-            // Fallback: try using window.location
-            if (typeof window !== 'undefined') {
-              console.log('🔄 Trying window.location fallback...');
-              window.location.href = '/onboarding/welcome';
-            }
+            // Navigation failed, but we'll continue anyway
           }
         }, 100);
 
@@ -152,9 +147,10 @@ export default function VerifyScreen() {
               console.log('🎯 Alert button pressed, ensuring navigation...');
               // Double-check navigation
               setTimeout(() => {
-                if (window.location.pathname === '/auth/verify') {
-                  console.log('⚠️ Still on verify page, forcing navigation...');
-                  window.location.href = '/onboarding/welcome';
+                try {
+                  router.replace('/onboarding/welcome');
+                } catch (navError) {
+                  console.error('❌ Navigation error:', navError);
                 }
               }, 500);
             }

@@ -5,6 +5,7 @@ import { router } from 'expo-router';
 import { Colors } from '@/constants/Colors';
 import { User, MapPin, Phone, Mail, CreditCard as Edit, Settings, Shield, Star, Package, TrendingUp, LogOut, Camera, Building, Truck, Users } from 'lucide-react-native';
 import { useUserRole } from '@/hooks/useUserRole';
+import { logout } from '@/lib/supabase';
 
 interface UserProfile {
   id: string;
@@ -61,14 +62,18 @@ export default function ProfileScreen() {
   };
 
   const handleEditProfile = () => {
-    router.push('/profile/edit');
+    // TODO: Implement profile edit screen
+    Alert.alert('Coming Soon', 'Profile editing will be available soon!');
+    // router.push('/profile/edit');
   };
 
   const handleSettings = () => {
-    router.push('/profile/settings');
+    // TODO: Implement settings screen
+    Alert.alert('Coming Soon', 'Settings will be available soon!');
+    // router.push('/profile/settings');
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     Alert.alert(
       'Logout',
       'Are you sure you want to logout?',
@@ -77,14 +82,20 @@ export default function ProfileScreen() {
         { 
           text: 'Logout', 
           style: 'destructive',
-          onPress: () => {
-            // Clear demo session
-            if (typeof window !== 'undefined') {
-              localStorage.removeItem('demo_session');
-              localStorage.removeItem('demo_user');
-              localStorage.removeItem('demo_farmer_profile');
+          onPress: async () => {
+            try {
+              const result = await logout();
+              
+              if (result.success) {
+                console.log('🔄 Navigating to verification screen...');
+                router.replace('/auth/verify');
+              } else {
+                Alert.alert('Error', 'Failed to logout. Please try again.');
+              }
+            } catch (error) {
+              console.error('❌ Logout error:', error);
+              Alert.alert('Error', 'Failed to logout. Please try again.');
             }
-            router.replace('/auth/verify');
           }
         }
       ]
@@ -187,7 +198,7 @@ export default function ProfileScreen() {
             <View style={styles.roleRow}>
               {getRoleIcon()}
               <Text style={[styles.roleText, { color: getRoleColor() }]}>
-                {userRole?.charAt(0).toUpperCase() + userRole?.slice(1)}
+                {userRole ? userRole.charAt(0).toUpperCase() + userRole.slice(1) : 'User'}
               </Text>
             </View>
 
@@ -279,7 +290,11 @@ export default function ProfileScreen() {
             {userRole === 'farmer' && (
               <TouchableOpacity 
                 style={styles.actionButton}
-                onPress={() => router.push('/crops/add')}
+                onPress={() => {
+                  // TODO: Implement add crop screen
+                  Alert.alert('Coming Soon', 'Add crop functionality will be available soon!');
+                  // router.push('/crops/add');
+                }}
               >
                 <Package color={Colors.primary[600]} size={20} />
                 <Text style={styles.actionButtonText}>Add New Crop</Text>
@@ -288,7 +303,11 @@ export default function ProfileScreen() {
             
             <TouchableOpacity 
               style={styles.actionButton}
-              onPress={() => router.push('/profile/verification')}
+              onPress={() => {
+                // TODO: Implement verification screen
+                Alert.alert('Coming Soon', 'Verification status will be available soon!');
+                // router.push('/profile/verification');
+              }}
             >
               <Shield color={Colors.success[600]} size={20} />
               <Text style={styles.actionButtonText}>Verification Status</Text>

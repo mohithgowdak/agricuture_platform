@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { 
   View, 
   Text, 
@@ -16,6 +16,7 @@ import { supabase } from '@/lib/supabase';
 import { Colors } from '@/constants/Colors';
 import { ArrowRight, ArrowLeft, Building, Mail, Phone, MapPin, CreditCard, Gift } from 'lucide-react-native';
 import { useUserRole } from '@/hooks/useUserRole';
+import { storage } from '@/lib/storage';
 
 export default function BuyerRegisterScreen() {
   const [step, setStep] = useState<'info' | 'company' | 'subscription'>('info');
@@ -149,17 +150,15 @@ export default function BuyerRegisterScreen() {
       };
 
       // Store demo buyer profile
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('demo_buyer_profile', JSON.stringify(mockBuyerProfile));
-        console.log('💾 Demo buyer profile stored:', mockBuyerProfile);
-        
-        // Update demo user with buyer role
-        const demoUser = localStorage.getItem('demo_user');
-        if (demoUser) {
-          const user = JSON.parse(demoUser);
-          user.role = 'buyer';
-          localStorage.setItem('demo_user', JSON.stringify(user));
-        }
+      await storage.setItem('demo_buyer_profile', JSON.stringify(mockBuyerProfile));
+      console.log('💾 Demo buyer profile stored:', mockBuyerProfile);
+      
+      // Update demo user with buyer role
+      const demoUserStr = await storage.getItem('demo_user');
+      if (demoUserStr) {
+        const user = JSON.parse(demoUserStr);
+        user.role = 'buyer';
+        await storage.setItem('demo_user', JSON.stringify(user));
       }
 
       console.log('✅ Buyer registration successful!');
@@ -181,10 +180,7 @@ export default function BuyerRegisterScreen() {
                 console.log('✅ Navigation to tabs executed');
               } catch (navError) {
                 console.error('❌ Navigation error:', navError);
-                // Fallback navigation
-                if (typeof window !== 'undefined') {
-                  window.location.href = '/';
-                }
+                // Navigation failed, but we'll continue anyway
               }
             }, 100);
           }

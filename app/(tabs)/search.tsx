@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Image } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Image, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState } from 'react';
 import { router } from 'expo-router';
@@ -148,7 +148,9 @@ export default function SearchScreen() {
   };
 
   const handleContact = (result: SearchResult) => {
-    router.push(`/contact/${result.type}/${result.id}`);
+    // TODO: Implement contact functionality
+    Alert.alert('Coming Soon', `Contact functionality for ${result.type} will be available soon!`);
+    // router.push(`/contact/${result.type}/${result.id}`);
   };
 
   return (

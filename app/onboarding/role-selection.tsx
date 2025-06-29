@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Colors } from '@/constants/Colors';
 import { ArrowRight, Package, Building, Truck, Users, Globe, Shield } from 'lucide-react-native';
 import { useUserRole } from '@/hooks/useUserRole';
+import { storage } from '@/lib/storage';
 
 type UserRole = 'farmer' | 'buyer' | 'logistics';
 
@@ -84,13 +85,11 @@ export default function RoleSelectionScreen() {
       updateUserRole(selectedRole);
 
       // Update demo user data
-      if (typeof window !== 'undefined') {
-        const demoUser = localStorage.getItem('demo_user');
-        if (demoUser) {
-          const user = JSON.parse(demoUser);
-          user.role = selectedRole;
-          localStorage.setItem('demo_user', JSON.stringify(user));
-        }
+      const demoUserStr = await storage.getItem('demo_user');
+      if (demoUserStr) {
+        const user = JSON.parse(demoUserStr);
+        user.role = selectedRole;
+        await storage.setItem('demo_user', JSON.stringify(user));
       }
 
       // Navigate based on role
@@ -110,90 +109,96 @@ export default function RoleSelectionScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.content}>
-        <View style={styles.header}>
-          <View style={styles.iconContainer}>
-            <Users color={Colors.primary[600]} size={48} />
+      <ScrollView 
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.content}>
+          <View style={styles.header}>
+            <View style={styles.iconContainer}>
+              <Users color={Colors.primary[600]} size={48} />
+            </View>
+            <Text style={styles.title}>Choose Your Role</Text>
+            <Text style={styles.subtitle}>
+              Select how you want to participate in the AgriConnect marketplace
+            </Text>
           </View>
-          <Text style={styles.title}>Choose Your Role</Text>
-          <Text style={styles.subtitle}>
-            Select how you want to participate in the AgriConnect marketplace
-          </Text>
-        </View>
 
-        <View style={styles.rolesContainer}>
-          {roleOptions.map((role) => {
-            const IconComponent = role.icon;
-            const isSelected = selectedRole === role.id;
-            
-            return (
-              <TouchableOpacity
-                key={role.id}
-                style={[
-                  styles.roleCard,
-                  isSelected && styles.roleCardSelected,
-                  { borderColor: isSelected ? role.color : Colors.neutral[200] }
-                ]}
-                onPress={() => handleRoleSelect(role.id)}
-              >
-                <View style={styles.roleHeader}>
-                  <View style={[styles.roleIconContainer, { backgroundColor: role.color + '20' }]}>
-                    <IconComponent color={role.color} size={32} />
-                  </View>
-                  <View style={styles.roleTitleContainer}>
-                    <Text style={styles.roleTitle}>{role.title}</Text>
-                    <Text style={styles.roleSubtitle}>{role.subtitle}</Text>
-                  </View>
-                  {isSelected && (
-                    <View style={styles.selectedIndicator}>
-                      <Shield color={role.color} size={20} />
+          <View style={styles.rolesContainer}>
+            {roleOptions.map((role) => {
+              const IconComponent = role.icon;
+              const isSelected = selectedRole === role.id;
+              
+              return (
+                <TouchableOpacity
+                  key={role.id}
+                  style={[
+                    styles.roleCard,
+                    isSelected && styles.roleCardSelected,
+                    { borderColor: isSelected ? role.color : Colors.neutral[200] }
+                  ]}
+                  onPress={() => handleRoleSelect(role.id)}
+                >
+                  <View style={styles.roleHeader}>
+                    <View style={[styles.roleIconContainer, { backgroundColor: role.color + '20' }]}>
+                      <IconComponent color={role.color} size={32} />
                     </View>
-                  )}
-                </View>
-
-                <Text style={styles.roleDescription}>{role.description}</Text>
-
-                <View style={styles.benefitsContainer}>
-                  <Text style={styles.benefitsTitle}>Key Benefits:</Text>
-                  {role.benefits.map((benefit, index) => (
-                    <View key={index} style={styles.benefitItem}>
-                      <View style={[styles.benefitDot, { backgroundColor: role.color }]} />
-                      <Text style={styles.benefitText}>{benefit}</Text>
+                    <View style={styles.roleTitleContainer}>
+                      <Text style={styles.roleTitle}>{role.title}</Text>
+                      <Text style={styles.roleSubtitle}>{role.subtitle}</Text>
                     </View>
-                  ))}
-                </View>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
+                    {isSelected && (
+                      <View style={styles.selectedIndicator}>
+                        <Shield color={role.color} size={20} />
+                      </View>
+                    )}
+                  </View>
 
-        <TouchableOpacity 
-          style={[
-            styles.continueButton,
-            !selectedRole && styles.continueButtonDisabled,
-            loading && styles.continueButtonDisabled
-          ]}
-          onPress={handleContinue}
-          disabled={!selectedRole || loading}
-        >
-          <Text style={[
-            styles.continueButtonText,
-            !selectedRole && styles.continueButtonTextDisabled
-          ]}>
-            {loading ? 'Setting up...' : 'Continue'}
-          </Text>
-          {!loading && selectedRole && (
-            <ArrowRight color={Colors.text.inverse} size={20} />
-          )}
-        </TouchableOpacity>
+                  <Text style={styles.roleDescription}>{role.description}</Text>
 
-        <View style={styles.infoBox}>
-          <Globe color={Colors.accent[600]} size={16} />
-          <Text style={styles.infoText}>
-            You can always change your role later in your profile settings
-          </Text>
+                  <View style={styles.benefitsContainer}>
+                    <Text style={styles.benefitsTitle}>Key Benefits:</Text>
+                    {role.benefits.map((benefit, index) => (
+                      <View key={index} style={styles.benefitItem}>
+                        <View style={[styles.benefitDot, { backgroundColor: role.color }]} />
+                        <Text style={styles.benefitText}>{benefit}</Text>
+                      </View>
+                    ))}
+                  </View>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+
+          <TouchableOpacity 
+            style={[
+              styles.continueButton,
+              !selectedRole && styles.continueButtonDisabled,
+              loading && styles.continueButtonDisabled
+            ]}
+            onPress={handleContinue}
+            disabled={!selectedRole || loading}
+          >
+            <Text style={[
+              styles.continueButtonText,
+              !selectedRole && styles.continueButtonTextDisabled
+            ]}>
+              {loading ? 'Setting up...' : 'Continue'}
+            </Text>
+            {!loading && selectedRole && (
+              <ArrowRight color={Colors.text.inverse} size={20} />
+            )}
+          </TouchableOpacity>
+
+          <View style={styles.infoBox}>
+            <Globe color={Colors.accent[600]} size={16} />
+            <Text style={styles.infoText}>
+              You can always change your role later in your profile settings
+            </Text>
+          </View>
         </View>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -203,9 +208,14 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.background,
   },
-  content: {
+  scrollView: {
     flex: 1,
+  },
+  scrollContent: {
     padding: 24,
+    paddingBottom: 40,
+  },
+  content: {
   },
   header: {
     alignItems: 'center',
@@ -234,7 +244,6 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   rolesContainer: {
-    flex: 1,
     gap: 16,
     marginBottom: 24,
   },

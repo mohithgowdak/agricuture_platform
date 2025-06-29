@@ -16,6 +16,7 @@ import { supabase } from '@/lib/supabase';
 import { Colors } from '@/constants/Colors';
 import { MapPin, ArrowRight, ArrowLeft } from 'lucide-react-native';
 import ImagePicker from '@/components/ImagePicker';
+import { storage } from '@/lib/storage';
 
 export default function ProfileSetupScreen() {
   const [formData, setFormData] = useState({
@@ -122,10 +123,8 @@ export default function ProfileSetupScreen() {
       };
 
       // Store demo profile
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('demo_farmer_profile', JSON.stringify(mockProfile));
-        console.log('💾 Demo profile stored:', mockProfile);
-      }
+      await storage.setItem('demo_farmer_profile', JSON.stringify(mockProfile));
+      console.log('💾 Demo profile stored:', mockProfile);
 
       console.log('✅ Profile creation successful!');
       
@@ -137,10 +136,7 @@ export default function ProfileSetupScreen() {
           console.log('✅ Navigation to tabs executed');
         } catch (navError) {
           console.error('❌ Navigation error:', navError);
-          // Fallback navigation
-          if (typeof window !== 'undefined') {
-            window.location.href = '/(tabs)';
-          }
+          // Navigation failed, but we'll continue anyway
         }
       }, 100);
 
